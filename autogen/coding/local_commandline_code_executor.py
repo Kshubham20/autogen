@@ -28,7 +28,7 @@ A = ParamSpec("A")
 
 
 class LocalCommandLineCodeExecutor(CodeExecutor):
-    SUPPORTED_LANGUAGES: ClassVar[List[str]] = ["bash", "shell", "sh", "pwsh", "powershell", "ps1", "python"]
+    SUPPORTED_LANGUAGES: ClassVar[List[str]] = ["bash", "shell", "sh", "pwsh", "powershell", "ps1", "python","cpp"]
     FUNCTION_PROMPT_TEMPLATE: ClassVar[
         str
     ] = """You have access to the following user defined functions. They can be accessed from the module called `$module_name` by their function names.
@@ -245,8 +245,25 @@ $functions"""
                 f.write(code)
             file_names.append(written_file)
 
-            program = sys.executable if lang.startswith("python") else _cmd(lang)
+            # program = sys.executable if lang.startswith("python") else _cmd(lang)
+            # cmd = [program, str(written_file.absolute())]
+            program = sys.executable if lang == "python" else lang
             cmd = [program, str(written_file.absolute())]
+
+            if lang == "cpp":
+                import shutil
+
+                gcc_path = shutil.which('gcc')
+                gpp_path = shutil.which('g++')
+
+                # print(f"gcc is located at: {gcc_path}")
+                # print(f"g++ is located at: {gpp_path}")
+                subprocess.call([gpp_path, str(written_file.absolute()), "-o", str(written_file.absolute())+".out"])
+                # print("test")
+                cmd = [str(written_file.absolute()) + '.out' ]
+            
+            else :
+                cmd = [_cmd(lang), str(written_file.absolute())]
 
             try:
                 result = subprocess.run(
